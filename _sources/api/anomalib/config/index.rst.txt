@@ -5,7 +5,7 @@
 
 .. autoapi-nested-parse::
 
-   Utilities to get configurable parameters.
+   Utilities for parsing model configuration.
 
 
 

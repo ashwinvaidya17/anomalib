@@ -15,18 +15,9 @@ Subpackages
    :titlesonly:
    :maxdepth: 3
 
-   hpo/index.rst
-   normalization/index.rst
-
-
-Submodules
-----------
-.. toctree::
-   :titlesonly:
-   :maxdepth: 1
-
-   download_progress_bar/index.rst
-   post_process/index.rst
-   visualizer/index.rst
+   callbacks/index.rst
+   loggers/index.rst
+   metrics/index.rst
+   sweep/index.rst
 
 
