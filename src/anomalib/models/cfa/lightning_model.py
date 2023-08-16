@@ -13,10 +13,10 @@ from __future__ import annotations
 import logging
 
 import torch
+from lightning.pytorch import Callback
+from lightning.pytorch.callbacks import EarlyStopping
+from lightning.pytorch.utilities.types import STEP_OUTPUT
 from omegaconf import DictConfig, ListConfig
-from pytorch_lightning import Callback
-from pytorch_lightning.callbacks import EarlyStopping
-from pytorch_lightning.utilities.types import STEP_OUTPUT
 from torch import Tensor
 from torch.optim.optimizer import Optimizer
 
@@ -109,8 +109,6 @@ class Cfa(AnomalyModule):
             optimizer (Optimizer | None): Optimizer.
             optimizer_idx (int | None): Optimizer index.
         """
-        del optimizer, optimizer_idx, args, kwargs  # These variables are not used.
-
         # TODO: Investigate why retain_graph is needed.
         loss.backward(retain_graph=True)
 
