@@ -12,6 +12,8 @@ from torchmetrics import Metric
 class AnomalyScoreDistribution(Metric):
     """Mean and standard deviation of the anomaly scores of normal training data."""
 
+    full_state_update: bool = True
+
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.anomaly_maps: list[Tensor] = []

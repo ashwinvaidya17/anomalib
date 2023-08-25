@@ -91,20 +91,20 @@ def get_callbacks(config: DictConfig | ListConfig) -> list[Callback]:
     )
     callbacks.append(metrics_callback)
 
-    if "normalization_method" in config.model.keys() and not config.model.normalization_method == "none":
-        if config.model.normalization_method == "cdf":
-            if config.model.name in ("padim", "stfpm"):
-                if "nncf" in config.optimization and config.optimization.nncf.apply:
-                    raise NotImplementedError("CDF Score Normalization is currently not compatible with NNCF.")
-                callbacks.append(CdfNormalizationCallback())
-            else:
-                raise NotImplementedError("Score Normalization is currently supported for PADIM and STFPM only.")
-        elif config.model.normalization_method == "min_max":
-            callbacks.append(MinMaxNormalizationCallback())
-        else:
-            raise ValueError(f"Normalization method not recognized: {config.model.normalization_method}")
+    # if "normalization_method" in config.model.keys() and not config.model.normalization_method == "none":
+    #     if config.model.normalization_method == "cdf":
+    #         if config.model.name in ("padim", "stfpm"):
+    #             if "nncf" in config.optimization and config.optimization.nncf.apply:
+    #                 raise NotImplementedError("CDF Score Normalization is currently not compatible with NNCF.")
+    #             callbacks.append(CdfNormalizationCallback())
+    #         else:
+    #             raise NotImplementedError("Score Normalization is currently supported for PADIM and STFPM only.")
+    #     elif config.model.normalization_method == "min_max":
+    #         callbacks.append(MinMaxNormalizationCallback())
+    #     else:
+    #         raise ValueError(f"Normalization method not recognized: {config.model.normalization_method}")
 
-    add_visualizer_callback(callbacks, config)
+    # add_visualizer_callback(callbacks, config)
 
     if "optimization" in config.keys():
         if "nncf" in config.optimization and config.optimization.nncf.apply:
