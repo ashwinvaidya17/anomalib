@@ -2,8 +2,8 @@ from itertools import chain
 from pathlib import Path
 from collections import OrderedDict
 
+import lightning.pytorch as pl
 import pytest
-import pytorch_lightning as pl
 from omegaconf import OmegaConf
 import torch
 
