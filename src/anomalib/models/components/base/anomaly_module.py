@@ -8,8 +8,7 @@ from __future__ import annotations
 import importlib
 import logging
 from abc import ABC
-from typing import Any, OrderedDict
-from warnings import warn
+from typing import Any
 
 import lightning.pytorch as pl
 import torch
@@ -18,8 +17,8 @@ from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torch import Tensor, nn
 from torchmetrics import Metric
 
-from anomalib.post_processing import ThresholdMethod
-from anomalib.utils.metrics import AnomalibMetricCollection, AnomalyScoreDistribution, AnomalyScoreThreshold, MinMax
+from anomalib.utils.metrics import AnomalibMetricCollection
+from anomalib.utils.metrics.threshold import BaseThreshold
 
 logger = logging.getLogger(__name__)
 
@@ -39,9 +38,8 @@ class AnomalyModule(pl.LightningModule, ABC):
         self.loss: nn.Module
         self.callbacks: list[Callback]
 
-        self.threshold_method: ThresholdMethod
-        self.image_threshold = AnomalyScoreThreshold().cpu()
-        self.pixel_threshold = AnomalyScoreThreshold().cpu()
+        self.image_threshold: BaseThreshold
+        self.pixel_threshold: BaseThreshold
 
         self.normalization_metrics: Metric
 
@@ -102,9 +100,6 @@ class AnomalyModule(pl.LightningModule, ABC):
         """Called at the end of each validation step."""
         self._outputs_to_cpu(outputs)
 
-        if self.threshold_method == ThresholdMethod.ADAPTIVE:
-            self._collect_output(self.image_threshold, self.pixel_threshold, outputs)
-
         self._collect_output(self.image_metrics, self.pixel_metrics, outputs)
 
     def on_test_batch_end(self, outputs, batch, batch_idx, dataloader_idx=0):
@@ -114,17 +109,11 @@ class AnomalyModule(pl.LightningModule, ABC):
         self._collect_output(self.image_metrics, self.pixel_metrics, outputs)
 
     def on_validation_epoch_start(self):
-        if self.threshold_method == ThresholdMethod.ADAPTIVE:
-            self.image_threshold.reset()
-            self.pixel_threshold.reset()
-
         self.image_metrics.reset()
         self.pixel_metrics.reset()
 
     def on_validation_epoch_end(self):
-        if self.threshold_method == ThresholdMethod.ADAPTIVE:
-            # Calculate thresholds before computing metrics.
-            self._compute_adaptive_threshold()
+        self._update_metrics_threshold()
 
         self._log_metrics()
 
@@ -135,14 +124,7 @@ class AnomalyModule(pl.LightningModule, ABC):
     def on_test_epoch_end(self):
         self._log_metrics()
 
-    def _compute_adaptive_threshold(self) -> None:
-        self.image_threshold.compute()
-
-        if self.pixel_threshold._update_called:
-            self.pixel_threshold.compute()
-        else:
-            self.pixel_threshold.value = self.image_threshold.value
-
+    def _update_metrics_threshold(self) -> None:
         self.image_metrics.set_threshold(self.image_threshold.value.item())
         self.pixel_metrics.set_threshold(self.pixel_threshold.value.item())
 
@@ -175,48 +157,3 @@ class AnomalyModule(pl.LightningModule, ABC):
             self.log_dict(self.image_metrics, prog_bar=False)
         else:
             self.log_dict(self.image_metrics, prog_bar=True)
-
-    def _load_normalization_class(self, state_dict: OrderedDict[str, Tensor]) -> None:
-        """Assigns the normalization method to use."""
-        if "normalization_metrics.max" in state_dict.keys():
-            self.normalization_metrics = MinMax()
-        elif "normalization_metrics.image_mean" in state_dict.keys():
-            self.normalization_metrics = AnomalyScoreDistribution()
-        else:
-            warn("No known normalization found in model weights.")
-
-    def _load_metrics(self, state_dict: OrderedDict[str, Tensor]) -> None:
-        """Load metrics from saved checkpoint."""
-        self._set_metrics("pixel", state_dict)
-        self._set_metrics("image", state_dict)
-
-    def _set_metrics(self, name: str, state_dict: OrderedDict[str, Tensor]):
-        """Sets the pixel/image metrics.
-
-        Args:
-        name (str): is it pixel or image.
-        state_dict (OrderedDict[str, Tensor]): state dict of the model.
-        """
-        metric_keys = [key for key in state_dict.keys() if key.startswith(f"{name}_metrics")]
-        if not hasattr(self, f"{name}_metrics") and any(metric_keys):
-            metrics = AnomalibMetricCollection([], prefix=f"{name}_")
-            for key in metric_keys:
-                class_name = key.split(".")[1]
-                try:
-                    metrics_module = importlib.import_module("anomalib.utils.metrics")
-                    metrics_cls = getattr(metrics_module, class_name)
-                except Exception as exception:
-                    raise ImportError(f"Class {class_name} not found in module anomalib.utils.metrics") from exception
-                metrics.add_metrics(metrics_cls())
-            setattr(self, f"{name}_metrics", metrics)
-
-    def load_state_dict(self, state_dict: OrderedDict[str, Tensor], strict: bool = True):
-        """Load state dict from checkpoint.
-
-        Ensures that normalization and thresholding attributes is properly setup before model is loaded.
-        """
-        # Used to load missing normalization and threshold parameters
-        self._load_normalization_class(state_dict)
-        # Used to load metrics if there is any related data in state_dict
-        self._load_metrics(state_dict)
-        return super().load_state_dict(state_dict, strict=strict)
