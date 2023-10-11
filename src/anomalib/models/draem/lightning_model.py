@@ -95,7 +95,8 @@ class Draem(AnomalyModule):
 
         if self.sspcab:
             loss += self.sspcab_lambda * self.sspcab_loss(
-                self.sspcab_activations["input"], self.sspcab_activations["output"]
+                self.sspcab_activations["input"],
+                self.sspcab_activations["output"],
             )
 
         self.log("train_loss", loss.item(), on_epoch=True, prog_bar=True, logger=True)
