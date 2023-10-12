@@ -19,8 +19,7 @@ logger = logging.getLogger(__name__)
 def imagenet_norm_batch(x):
     mean = torch.tensor([0.485, 0.456, 0.406])[None, :, None, None].to(x.device)
     std = torch.tensor([0.229, 0.224, 0.225])[None, :, None, None].to(x.device)
-    x_norm = (x - mean) / std
-    return x_norm
+    return (x - mean) / std
 
 
 def reduce_tensor_elems(tensor: torch.Tensor, m=2**24) -> torch.Tensor:
@@ -77,8 +76,7 @@ class SmallPatchDescriptionNetwork(nn.Module):
         x = F.relu(self.conv2(x))
         x = self.avgpool2(x)
         x = F.relu(self.conv3(x))
-        x = self.conv4(x)
-        return x
+        return self.conv4(x)
 
 
 class MediumPatchDescriptionNetwork(nn.Module):
@@ -109,8 +107,7 @@ class MediumPatchDescriptionNetwork(nn.Module):
         x = F.relu(self.conv3(x))
         x = F.relu(self.conv4(x))
         x = F.relu(self.conv5(x))
-        x = self.conv6(x)
-        return x
+        return self.conv6(x)
 
 
 class Encoder(nn.Module):
@@ -131,8 +128,7 @@ class Encoder(nn.Module):
         x = F.relu(self.enconv3(x))
         x = F.relu(self.enconv4(x))
         x = F.relu(self.enconv5(x))
-        x = self.enconv6(x)
-        return x
+        return self.enconv6(x)
 
 
 class Decoder(nn.Module):
@@ -186,8 +182,7 @@ class Decoder(nn.Module):
         x = self.dropout6(x)
         x = F.interpolate(x, size=self.last_upsample, mode="bilinear")
         x = F.relu(self.deconv7(x))
-        x = self.deconv8(x)
-        return x
+        return self.deconv8(x)
 
 
 class AutoEncoder(nn.Module):
@@ -206,8 +201,7 @@ class AutoEncoder(nn.Module):
     def forward(self, x):
         x = imagenet_norm_batch(x)
         x = self.encoder(x)
-        x = self.decoder(x)
-        return x
+        return self.decoder(x)
 
 
 class EfficientAdModel(nn.Module):
@@ -271,10 +265,7 @@ class EfficientAdModel(nn.Module):
         )
 
     def is_set(self, p_dic: nn.ParameterDict) -> bool:
-        for _, value in p_dic.items():
-            if value.sum() != 0:
-                return True
-        return False
+        return any(value.sum() != 0 for _, value in p_dic.items())
 
     def choose_random_aug_image(self, image: Tensor) -> Tensor:
         transform_functions = [
@@ -332,9 +323,9 @@ class EfficientAdModel(nn.Module):
             loss_stae = torch.mean(distance_stae)
             return (loss_st, loss_ae, loss_stae)
 
-        else:
-            with torch.no_grad():
-                ae_output = self.ae(batch)
+        # Eval mode.
+        with torch.no_grad():
+            ae_output = self.ae(batch)
 
             map_st = torch.mean(distance_st, dim=1, keepdim=True)
             map_stae = torch.mean(
