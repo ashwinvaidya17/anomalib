@@ -74,10 +74,8 @@ class OCBE(nn.Module):
         self.conv3 = conv3x3(128 * block.expansion, 256 * block.expansion, 2)
         self.bn3 = norm_layer(256 * block.expansion)
 
-        # self.conv4 and self.bn4 are from the original code:
-        # https://github.com/hq-deng/RD4AD/blob/6554076872c65f8784f6ece8cfb39ce77e1aee12/resnet.py#L412
-        self.conv4 = conv1x1(1024 * block.expansion, 512 * block.expansion, 1)
-        self.bn4 = norm_layer(512 * block.expansion)
+        # This is present in the paper but not in the original code. With some initial experiments, removing this leads
+        # to better results
 
         for module in self.modules():
             if isinstance(module, nn.Conv2d):
@@ -120,17 +118,17 @@ class OCBE(nn.Module):
             ),
         )
         self.inplanes = planes * block.expansion
-        for _ in range(1, blocks):
-            layers.append(
-                block(
-                    self.inplanes,
-                    planes,
-                    groups=self.groups,
-                    base_width=self.base_width,
-                    dilation=self.dilation,
-                    norm_layer=norm_layer,
-                ),
+        layers = [
+            block(
+                self.inplanes,
+                planes,
+                groups=self.groups,
+                base_width=self.base_width,
+                dilation=self.dilation,
+                norm_layer=norm_layer,
             )
+            for _ in range(1, blocks)
+        ]
 
         return nn.Sequential(*layers)
 
@@ -148,7 +146,6 @@ class OCBE(nn.Module):
         feature1 = self.relu(self.bn3(self.conv3(features[1])))
         feature_cat = torch.cat([feature0, feature1, features[2]], 1)
         output = self.bn_layer(feature_cat)
-        # output = self.bn_layer(self.bn4(self.conv4(feature_cat)))
 
         return output.contiguous()
 
