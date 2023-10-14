@@ -142,7 +142,7 @@ class DraemLightning(Draem):
             anomaly_source_path=hparams.model.anomaly_source_path,
             beta=beta,
         )
-        self.hparams: DictConfig | ListConfig  # type: ignore
+        self.hparams: DictConfig | ListConfig
         self.save_hyperparameters(hparams)
 
     def configure_callbacks(self) -> list[EarlyStopping]:
