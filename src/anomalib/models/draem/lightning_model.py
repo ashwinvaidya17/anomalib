@@ -28,6 +28,7 @@ class Draem(AnomalyModule):
     """DRÆM: A discriminatively trained reconstruction embedding for surface anomaly detection.
 
     Args:
+    ----
         anomaly_source_path (str | None): Path to folder that contains the anomaly source images. Random noise will
             be used if left empty.
     """
@@ -56,14 +57,22 @@ class Draem(AnomalyModule):
         """Prepare the model for the SSPCAB training step by adding forward hooks for the SSPCAB layer activations."""
 
         def get_activation(name: str) -> Callable:
-            """Retrieves the activations.
+            """Retrieve the activations.
 
             Args:
+            ----
                 name (str): Identifier for the retrieved activations.
             """
 
             def hook(_, __, output: Tensor) -> None:  # noqa: ANN001
-                """Hook for retrieving the activations."""
+                """Create hook for retrieving the activations.
+
+                Args:
+                ----
+                    _: Placeholder for the module input.
+                    __: Placeholder for the module output.
+                    output (Tensor): The output tensor of the module.
+                """
                 self.sspcab_activations[name] = output
 
             return hook
@@ -72,15 +81,19 @@ class Draem(AnomalyModule):
         self.model.reconstructive_subnetwork.encoder.block5.register_forward_hook(get_activation("output"))
 
     def training_step(self, batch: dict[str, str | Tensor], *args, **kwargs) -> STEP_OUTPUT:
-        """Training Step of DRAEM.
+        """Perform the training step of DRAEM.
 
         Feeds the original image and the simulated anomaly
         image through the network and computes the training loss.
 
         Args:
+        ----
             batch (dict[str, str | Tensor]): Batch containing image filename, image, label and mask
+            args: Arguments.
+            kwargs: Keyword arguments.
 
         Returns:
+        -------
             Loss dictionary
         """
         del args, kwargs  # These variables are not used.
@@ -103,12 +116,16 @@ class Draem(AnomalyModule):
         return {"loss": loss}
 
     def validation_step(self, batch: dict[str, str | Tensor], *args, **kwargs) -> STEP_OUTPUT:
-        """Validation step of DRAEM. The Softmax predictions of the anomalous class are used as anomaly map.
+        """Perform the validation step of DRAEM. The Softmax predictions of the anomalous class are used as anomaly map.
 
         Args:
+        ----
             batch (dict[str, str | Tensor]): Batch of input images
+            args: Arguments.
+            kwargs: Keyword arguments.
 
         Returns:
+        -------
             Dictionary to which predicted anomaly maps have been added.
         """
         del args, kwargs  # These variables are not used.
@@ -119,6 +136,7 @@ class Draem(AnomalyModule):
 
     @property
     def trainer_arguments(self) -> dict[str, Any]:
+        """Return DRÆM-specific trainer arguments."""
         return {"gradient_clip_val": 0, "num_sanity_val_steps": 0}
 
 
@@ -126,6 +144,7 @@ class DraemLightning(Draem):
     """DRÆM: A discriminatively trained reconstruction embedding for surface anomaly detection.
 
     Args:
+    ----
         hparams (DictConfig | ListConfig): Model parameters
     """
 
@@ -149,6 +168,7 @@ class DraemLightning(Draem):
         """Configure model-specific callbacks.
 
         Note:
+        ----
             This method is used for the existing CLI.
             When PL CLI is introduced, configure callback method will be
                 deprecated, and callbacks will be configured from either
