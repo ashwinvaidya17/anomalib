@@ -11,7 +11,6 @@ from collections.abc import Callable
 from typing import Any
 
 import torch
-from lightning.pytorch.callbacks import EarlyStopping
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 from omegaconf import DictConfig, ListConfig
 from torch import Tensor, nn
@@ -134,6 +133,10 @@ class Draem(AnomalyModule):
         """Return DRÆM-specific trainer arguments."""
         return {"gradient_clip_val": 0, "num_sanity_val_steps": 0}
 
+    def configure_optimizers(self) -> torch.optim.Optimizer:
+        """Configure the Adam optimizer."""
+        return torch.optim.Adam(params=self.model.parameters(), lr=0.0001)
+
 
 class DraemLightning(Draem):
     """DRÆM: A discriminatively trained reconstruction embedding for surface anomaly detection.
@@ -157,30 +160,3 @@ class DraemLightning(Draem):
         )
         self.hparams: DictConfig | ListConfig
         self.save_hyperparameters(hparams)
-
-    def configure_callbacks(self) -> list[EarlyStopping]:
-        """Configure model-specific callbacks.
-
-        Note:
-        ----
-            This method is used for the existing CLI.
-            When PL CLI is introduced, configure callback method will be
-                deprecated, and callbacks will be configured from either
-                config.yaml file or from CLI.
-        """
-        callbacks = []
-        if "early_stopping" in self.hparams.model:
-            early_stopping = EarlyStopping(
-                monitor=self.hparams.model.early_stopping.metric,
-                patience=self.hparams.model.early_stopping.patience,
-                mode=self.hparams.model.early_stopping.mode,
-            )
-            callbacks.append(early_stopping)
-
-        return callbacks
-
-    def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[torch.optim.lr_scheduler.LRScheduler]]:
-        """Configure the Adam optimizer."""
-        optimizer = torch.optim.Adam(params=self.model.parameters(), lr=self.hparams.model.lr)
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[400, 600], gamma=0.1)
-        return [optimizer], [scheduler]
