@@ -1,6 +1,6 @@
 """Load Anomaly Model."""
 
-# Copyright (C) 2022 Intel Corporation
+# Copyright (C) 2022-2023 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 
@@ -11,24 +11,25 @@ from importlib import import_module
 from jsonargparse import Namespace
 from omegaconf import DictConfig, OmegaConf
 
-from anomalib.models.ai_vad import AiVad
-from anomalib.models.cfa import Cfa
-from anomalib.models.cflow import Cflow
 from anomalib.models.components import AnomalyModule
-from anomalib.models.csflow import Csflow
-from anomalib.models.dfkde import Dfkde
-from anomalib.models.dfm import Dfm
-from anomalib.models.draem import Draem
-from anomalib.models.dsr import Dsr
-from anomalib.models.efficient_ad import EfficientAd
-from anomalib.models.fastflow import Fastflow
-from anomalib.models.ganomaly import Ganomaly
-from anomalib.models.padim import Padim
-from anomalib.models.patchcore import Patchcore
-from anomalib.models.reverse_distillation import ReverseDistillation
-from anomalib.models.rkde import Rkde
-from anomalib.models.stfpm import Stfpm
-from anomalib.models.uflow import Uflow
+
+from .image import (
+    Cfa,
+    Cflow,
+    Csflow,
+    Dfkde,
+    Dfm,
+    Draem,
+    EfficientAd,
+    Fastflow,
+    Ganomaly,
+    Padim,
+    Patchcore,
+    ReverseDistillation,
+    Rkde,
+    Stfpm,
+)
+from .video import AiVad
 
 
 class UnknownModelError(ModuleNotFoundError):
@@ -43,6 +44,7 @@ __all__ = [
     "Dfm",
     "Draem",
     "Dsr",
+    "EfficientAd",
     "Fastflow",
     "Ganomaly",
     "Padim",
@@ -52,7 +54,6 @@ __all__ = [
     "Stfpm",
     "Uflow",
     "AiVad",
-    "EfficientAd",
 ]
 
 logger = logging.getLogger(__name__)
