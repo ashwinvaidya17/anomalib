@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Replaced OpenVINO inferencer with modelAPI by @ashwinvaidya17 in https://github.com/openvinotoolkit/anomalib/pull/1287
 - Enable training with only normal images for MVTec by @djdameln in https://github.com/openvinotoolkit/anomalib/pull/1241
 - Improve default settings of EfficientAD in https://github.com/openvinotoolkit/anomalib/pull/1143
 - Added the tracer_kwargs to the TorchFXFeatureExtractor class by @JoaoGuibs in https://github.com/openvinotoolkit/anomalib/pull/1214

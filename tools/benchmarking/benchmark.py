@@ -31,13 +31,7 @@ from anomalib.deploy import export
 from anomalib.deploy.export import ExportMode
 from anomalib.models import get_model
 from anomalib.utils.loggers import configure_logger
-from anomalib.utils.sweep import (
-    get_openvino_throughput,
-    get_run_config,
-    get_sweep_callbacks,
-    get_torch_throughput,
-    set_in_nested_config,
-)
+from anomalib.utils.sweep import get_run_config, get_sweep_callbacks, get_torch_throughput, set_in_nested_config
 
 warnings.filterwarnings("ignore")
 
@@ -128,7 +122,7 @@ def get_single_model_metrics(model_config: DictConfig | ListConfig, openvino_met
         )
 
         # Get OpenVINO metrics
-        openvino_throughput = float("nan")
+        float("nan")
         if openvino_metrics:
             # Create dirs for openvino model export
             export(
@@ -139,14 +133,12 @@ def get_single_model_metrics(model_config: DictConfig | ListConfig, openvino_met
                 export_mode=ExportMode.OPENVINO,
                 export_root=project_path,
             )
-            openvino_throughput = get_openvino_throughput(model_path=project_path, test_dataset=datamodule.test_data)
 
         # arrange the data
         data = {
             "Training Time (s)": training_time,
             "Testing Time (s)": testing_time,
             f"Inference Throughput {model_config.trainer.accelerator} (fps)": throughput,
-            "OpenVINO Inference Throughput (fps)": openvino_throughput,
         }
         for key, val in test_results[0].items():
             data[key] = float(val)
