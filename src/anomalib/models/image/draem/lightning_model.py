@@ -14,6 +14,7 @@ import torch
 from lightning.pytorch.utilities.types import STEP_OUTPUT
 from torch import nn
 
+from anomalib import LearningType
 from anomalib.data.utils import Augmenter
 from anomalib.models.components import AnomalyModule
 
@@ -140,26 +141,11 @@ class Draem(AnomalyModule):
         """Configure the Adam optimizer."""
         return torch.optim.Adam(params=self.model.parameters(), lr=0.0001)
 
+    @property
+    def learning_type(self) -> LearningType:
+        """Return the learning type of the model.
 
-class DraemLightning(Draem):
-    """DRÆM: A discriminatively trained reconstruction embedding for surface anomaly detection.
-
-    Args:
-        hparams (DictConfig | ListConfig): Model parameters
-    """
-
-    def __init__(self, hparams: DictConfig | ListConfig) -> None:
-        # beta in config can be either float or sequence
-        beta = hparams.model.beta
-        # if sequence - change to tuple[float, float]
-        if isinstance(beta, ListConfig):
-            beta = tuple(beta)
-
-        super().__init__(
-            enable_sspcab=hparams.model.enable_sspcab,
-            sspcab_lambda=hparams.model.sspcab_lambda,
-            anomaly_source_path=hparams.model.anomaly_source_path,
-            beta=beta,
-        )
-        self.hparams: DictConfig | ListConfig
-        self.save_hyperparameters(hparams)
+        Returns:
+            LearningType: Learning type of the model.
+        """
+        return LearningType.ONE_CLASS
