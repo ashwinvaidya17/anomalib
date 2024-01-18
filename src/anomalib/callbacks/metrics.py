@@ -90,7 +90,13 @@ class _MetricsCallback(Callback):
 
         if isinstance(pl_module, AnomalyModule):
             pl_module.image_metrics = create_metric_collection(image_metric_names, "image_")
-            pl_module.pixel_metrics = create_metric_collection(pixel_metric_names, "pixel_")
+            if hasattr(pl_module, "pixel_metrics"):  # incase metrics are loaded from model checkpoint
+                new_metrics = create_metric_collection(pixel_metric_names, "pixel_")
+                for name in new_metrics:
+                    if name not in pl_module.pixel_metrics:
+                        pl_module.pixel_metrics.add_metrics(new_metrics[name])
+            else:
+                pl_module.pixel_metrics = create_metric_collection(pixel_metric_names, "pixel_")
             self._set_threshold(pl_module)
 
     def on_validation_epoch_start(

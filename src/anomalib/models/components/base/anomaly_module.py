@@ -137,6 +137,32 @@ class AnomalyModule(pl.LightningModule, ABC):
 
         return super().load_state_dict(state_dict, strict)
 
+    def _load_metrics(self, state_dict: OrderedDict[str, torch.Tensor]) -> None:
+        """Load metrics from saved checkpoint."""
+        self._add_metrics("pixel", state_dict)
+        self._add_metrics("image", state_dict)
+
+    def _add_metrics(self, name: str, state_dict: OrderedDict[str, torch.Tensor]) -> None:
+        """Sets the pixel/image metrics.
+
+        Args:
+            name (str): is it pixel or image.
+            state_dict (OrderedDict[str, Tensor]): state dict of the model.
+        """
+        metric_keys = [key for key in state_dict if key.startswith(f"{name}_metrics")]
+        if any(metric_keys):
+            metrics = getattr(self, f"{name}_metrics")
+            for key in metric_keys:
+                class_name = key.split(".")[1]
+                try:
+                    metrics_module = importlib.import_module("anomalib.metrics")
+                    metrics_cls = getattr(metrics_module, class_name)
+                except (ImportError, AttributeError) as exception:
+                    msg = f"Class {class_name} not found in module anomalib.metrics"
+                    raise ImportError(msg) from exception
+                logger.info("Loading %s metrics from state dict", class_name)
+                metrics.add_metrics(metrics_cls())
+
     def _get_instance(self, state_dict: OrderedDict[str, Any], dict_key: str) -> BaseThreshold:
         """Get the threshold class from the ``state_dict``."""
         class_path = state_dict.pop(dict_key)
