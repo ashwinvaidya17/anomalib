@@ -308,7 +308,7 @@ class EfficientAd(AnomalyModule):
     @property
     def trainer_arguments(self) -> dict[str, Any]:
         """Return EfficientAD trainer arguments."""
-        return {"gradient_clip_val": 0, "num_sanity_val_steps": 0}
+        return {"num_sanity_val_steps": 0}
 
     @property
     def learning_type(self) -> LearningType:
