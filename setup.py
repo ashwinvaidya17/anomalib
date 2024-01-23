@@ -88,7 +88,7 @@ EXTRAS_REQUIRE = {
 
 try:
     # OpenCV installed via conda.
-    import cv2  # NOQA: F401
+    import cv2
 
     major, minor, *rest = cv2.__version__.split(".")
     opencv_base = next((req for req in INSTALL_REQUIRES if req.startswith("opencv-python")), None)
@@ -96,7 +96,8 @@ try:
         opencv_base_version = opencv_base.split(">=")[-1]
         req_major, req_minor, *req_rest = opencv_base_version.split(".")
         if int(major) < int(req_major) and int(minor) < int(req_minor):
-            raise RuntimeError(f"OpenCV >={req_major}.{req_minor} is required but {cv2.__version__} is installed")
+            msg = f"OpenCV >={req_major}.{req_minor} is required but {cv2.__version__} is installed"
+            raise RuntimeError(msg)
         print("Removing OpenCV requirement since it was found")
         INSTALL_REQUIRES.remove(opencv_base)
 except ImportError:

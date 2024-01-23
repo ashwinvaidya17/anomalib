@@ -136,6 +136,8 @@ class AnomalyModule(pl.LightningModule, ABC):
             self.pixel_threshold = self._get_instance(state_dict, "pixel_threshold_class")
         if "normalization_class" in state_dict:
             self.normalization_metrics = self._get_instance(state_dict, "normalization_class")
+        # Used to load metrics if there is any related data in state_dict
+        self._load_metrics(state_dict)
 
         return super().load_state_dict(state_dict, strict)
 

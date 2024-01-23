@@ -35,7 +35,7 @@ class _MetricsCallback(Callback):
     these to the lightning module.
 
     Args:
-        task (TaskType): Task type of the current run.
+        task (TaskType | str): Task type of the current run.
         image_metrics (list[str] | str | None): List of image-level metrics.
         pixel_metrics (list[str] | str | None): List of pixel-level metrics.
         device (str): Whether to compute metrics on cpu or gpu. Defaults to cpu.
@@ -43,13 +43,13 @@ class _MetricsCallback(Callback):
 
     def __init__(
         self,
-        task: TaskType = TaskType.SEGMENTATION,
+        task: TaskType | str = TaskType.SEGMENTATION,
         image_metrics: list[str] | str | None = None,
         pixel_metrics: list[str] | str | None = None,
         device: Device = Device.CPU,
     ) -> None:
         super().__init__()
-        self.task = task
+        self.task = TaskType(task)
         self.image_metric_names = image_metrics
         self.pixel_metric_names = pixel_metrics
         self.device = device

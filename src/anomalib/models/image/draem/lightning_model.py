@@ -21,7 +21,7 @@ from anomalib.models.components import AnomalyModule
 from .loss import DraemLoss
 from .torch_model import DraemModel
 
-__all__ = ["Draem", "DraemLightning"]
+__all__ = ["Draem"]
 
 
 class Draem(AnomalyModule):
@@ -139,7 +139,9 @@ class Draem(AnomalyModule):
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         """Configure the Adam optimizer."""
-        return torch.optim.Adam(params=self.model.parameters(), lr=0.0001)
+        optimizer = torch.optim.Adam(params=self.model.parameters(), lr=0.0001)
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[400, 600], gamma=0.1)
+        return [optimizer], [scheduler]
 
     @property
     def learning_type(self) -> LearningType:
