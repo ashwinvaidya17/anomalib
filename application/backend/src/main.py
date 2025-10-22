@@ -24,6 +24,7 @@ from api.endpoints.sink_endpoints import router as sink_router
 from api.endpoints.source_endpoints import router as source_router
 from api.endpoints.trainable_models_endpoints import router as trainable_model_router
 from api.endpoints.webrtc import router as webrtc_router
+from api.endpoints.websocket import router as websocket_router
 from core.lifecycle import lifespan
 from exceptions import GetiBaseException
 
@@ -60,6 +61,7 @@ app.include_router(source_router)
 app.include_router(sink_router)
 app.include_router(webrtc_router)
 app.include_router(trainable_model_router)
+app.include_router(websocket_router)
 
 
 @app.exception_handler(GetiBaseException)

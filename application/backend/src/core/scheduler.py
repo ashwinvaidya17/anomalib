@@ -1,8 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import atexit
+import logging
 import multiprocessing as mp
 import os
 import queue
@@ -11,6 +11,7 @@ from multiprocessing.shared_memory import SharedMemory
 
 import psutil
 
+from communication.ipc import IPCConnectionManager
 from services.metrics_service import SIZE
 from utils.singleton import Singleton
 from workers import dispatching_routine, inference_routine, training_routine
@@ -33,6 +34,8 @@ class Scheduler(metaclass=Singleton):
         self.pred_queue: mp.Queue = mp.Queue(maxsize=self.PREDICTION_QUEUE_SIZE)
         # Queue for pushing predictions to the visualization stream (WebRTC)
         self.rtc_stream_queue: queue.Queue = queue.Queue(maxsize=1)
+        # IPC manager for communication between the main process and the workers
+        self.ipc_manager = IPCConnectionManager()
         # Event to sync all processes on application shutdown
         self.mp_stop_event = mp.Event()
         # Event to signal that the model has to be reloaded
@@ -54,12 +57,15 @@ class Scheduler(metaclass=Singleton):
         """Start all worker processes and threads"""
         logger.info("Starting worker processes...")
 
+        training_handle = self.ipc_manager.create_ipc_pipe()
+
         # Create and start processes
         training_proc = mp.Process(
             target=training_routine,
             name="Training worker",
-            args=(self.mp_stop_event,),
+            args=(self.mp_stop_event, training_handle),
         )
+
         # Training worker is not a daemon so that training script can spawn child processes
         training_proc.daemon = False
 
@@ -108,6 +114,9 @@ class Scheduler(metaclass=Singleton):
     def shutdown(self) -> None:
         """Shutdown all processes gracefully"""
         logger.info("Initiating graceful shutdown...")
+
+        # Close all communication channels
+        self.ipc_manager.cleanup()
 
         # Signal all processes to stop
         self.mp_stop_event.set()

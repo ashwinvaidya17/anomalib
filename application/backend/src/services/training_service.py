@@ -1,5 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
+
 import asyncio
 import logging
 
@@ -9,11 +11,12 @@ from anomalib.deploy import ExportType
 from anomalib.engine import Engine
 from anomalib.models import get_model
 
+from communication.ipc import IPCConnection
 from pydantic_models import JobStatus, Model
 from repositories.binary_repo import ImageBinaryRepository, ModelBinaryRepository
 from services import ModelService
 from services.job_service import JobService
-from utils import is_platform_darwin
+from utils.callbacks import GetiInspectProgressCallback
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +34,7 @@ class TrainingService:
     """
 
     @classmethod
-    async def train_pending_job(cls) -> Model | None:
+    async def train_pending_job(cls, ipc_pipe: IPCConnection) -> Model | None:
         """
         Process the next pending training job from the queue.
 
@@ -61,7 +64,7 @@ class TrainingService:
         try:
             # Use asyncio.to_thread to keep event loop responsive
             # TODO: Consider ProcessPoolExecutor for true parallelism with multiple jobs
-            trained_model = await asyncio.to_thread(cls._train_model, model)
+            trained_model = await asyncio.to_thread(cls._train_model, model, ipc_pipe)
             if trained_model is None:
                 raise ValueError("Training failed - model is None")
 
@@ -82,7 +85,7 @@ class TrainingService:
             raise e
 
     @staticmethod
-    def _train_model(model: Model) -> Model | None:
+    def _train_model(model: Model, ipc_pipe: IPCConnection) -> Model | None:
         """
         Execute CPU-intensive model training using anomalib.
 
@@ -112,11 +115,16 @@ class TrainingService:
 
         # Initialize anomalib model and engine
         anomalib_model = get_model(model=model.name)
-        engine = Engine(default_root_dir=model.export_path)
+        engine = Engine(
+            default_root_dir=model.export_path,
+            callbacks=[GetiInspectProgressCallback(ipc_pipe=ipc_pipe)],
+            devices=[0],
+            max_epochs=100,
+        )
 
         # Execute training and export
         export_format = ExportType.OPENVINO
-        engine.train(model=anomalib_model, datamodule=datamodule)
+        engine.fit(model=anomalib_model, datamodule=datamodule)
         export_path = engine.export(
             model=anomalib_model,
             export_type=export_format,

@@ -1,7 +1,8 @@
 {
     "extends": "@geti/config/typescript",
-    "include": ["src", "rsbuild.config.ts", "vitest.config.ts", "playwright.config.ts"],
+    "include": ["src", "rsbuild.config.ts", "vitest.config.ts", "playwright.config.ts", "src/geti-inspect-dts/geti-inspect.d.ts"],
     "compilerOptions": {
+        "jsx": "react",
         "types": ["vitest/globals"],
         "baseUrl": ".",
         "paths": {
@@ -9,6 +10,7 @@
             "@geti-inspect/api": ["./src/api/client"],
             "@geti-inspect/api/spec": ["./src/api/openapi-spec.d"],
             "@geti-inspect/hooks": ["./src/hooks"]
-        }
+        },
+        "allowImportingTsExtensions": true,
     },
 }

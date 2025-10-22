@@ -1,11 +1,17 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
+
 import asyncio
 import logging
-from multiprocessing.synchronize import Event as EventClass
+from typing import TYPE_CHECKING
 
+from communication.ipc import IPCConnection
 from services.training_service import TrainingService
 from utils import suppress_child_shutdown_signals
+
+if TYPE_CHECKING:
+    from multiprocessing.synchronize import Event as EventClass
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +19,7 @@ MAX_CONCURRENT_TRAINING = 1
 SCHEDULE_INTERVAL_SEC = 5
 
 
-async def _train_loop(stop_event: EventClass) -> None:
+async def _train_loop(stop_event: EventClass, ipc_pipe: IPCConnection) -> None:
     """Main training loop that polls for jobs and manages concurrent training tasks."""
     training_service = TrainingService()
     running_tasks: set[asyncio.Task] = set()
@@ -28,7 +34,7 @@ async def _train_loop(stop_event: EventClass) -> None:
             # - Multiple training jobs to run concurrently
             # - Event loop to remain responsive for shutdown signals
             if len(running_tasks) < MAX_CONCURRENT_TRAINING:
-                running_tasks.add(asyncio.create_task(training_service.train_pending_job()))
+                running_tasks.add(asyncio.create_task(training_service.train_pending_job(ipc_pipe)))
         except Exception as e:
             logger.error(f"Error occurred in training loop: {e}", exc_info=True)
 
@@ -49,10 +55,15 @@ async def _train_loop(stop_event: EventClass) -> None:
             logger.error(f"Exception during task cancellation: {e}", exc_info=True)
 
 
-def training_routine(stop_event: EventClass) -> None:
-    """Entry point for the training worker process."""
+def training_routine(stop_event: EventClass, ipc_pipe: IPCConnection) -> None:
+    """Entry point for the training worker process.
+
+    Args:
+        stop_event: Multiprocessing event to signal shutdown
+        ipc_pipe: IPC connection for sending events (progress, metrics) to main process
+    """
     suppress_child_shutdown_signals()
     try:
-        asyncio.run(_train_loop(stop_event))
+        asyncio.run(_train_loop(stop_event, ipc_pipe))
     finally:
         logger.info("Stopped training worker")

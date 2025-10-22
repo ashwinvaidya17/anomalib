@@ -2,8 +2,9 @@ from functools import lru_cache
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, Request, status, Form
+from fastapi import Depends, Form, HTTPException, Request, WebSocket, status
 
+from communication.ipc import IPCConnectionManager
 from core import Scheduler
 from services import (
     ActivePipelineService,
@@ -142,6 +143,11 @@ def get_model_id(model_id: str) -> UUID:
 async def get_webrtc_manager(request: Request) -> WebRTCManager:
     """Provides the global WebRTCManager instance from FastAPI application's state."""
     return request.app.state.webrtc_manager
+
+
+async def get_ipc(connection: WebSocket) -> IPCConnectionManager:
+    """Provides the global IPC instance from FastAPI application's state."""
+    return connection.app.state.scheduler.ipc_manager
 
 
 async def get_device_name(device: Annotated[str | None, Form()] = None) -> str | None:
