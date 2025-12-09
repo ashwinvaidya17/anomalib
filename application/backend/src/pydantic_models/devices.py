@@ -18,6 +18,7 @@ class DeviceList(BaseModel):
 class Camera(BaseModel):
     index: int
     name: str
+    backend: int  # eg cv2.CAP_DSHOW
 
 
 class CameraList(BaseModel):
@@ -27,9 +28,9 @@ class CameraList(BaseModel):
         "json_schema_extra": {
             "example": {
                 "devices": [
-                    {"index": 1200, "name": "camera_name1"},
-                    {"index": 1201, "name": "camera_name2"},
-                    {"index": 1202, "name": "camera_name3"},
+                    {"index": 1200, "name": "camera_name1", "backend": 1},
+                    {"index": 1201, "name": "camera_name2", "backend": 1},
+                    {"index": 1202, "name": "camera_name3", "backend": 0},
                 ]
             }
         }

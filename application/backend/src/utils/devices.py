@@ -12,6 +12,7 @@ from lightning.pytorch.accelerators import AcceleratorRegistry
 class CameraInfo(TypedDict):
     index: int
     name: str
+    backend: int  # This is needed as camera index depends on the backend
 
 
 class Devices:
@@ -25,16 +26,17 @@ class Devices:
         Example: ["camera", "camera"] -> ["camera", "camera (1)"]
 
         Returns:
-            list[CameraInfo]: List of dictionaries containing camera index and name.
+            list[CameraInfo]: List of dictionaries containing camera index, name, and cv2 backend.
         """
         names_count: dict[str, int] = defaultdict(int)
         cameras: list[CameraInfo] = []
-        for cam in cv2_enumerate_cameras.enumerate_cameras():
-            duplicate_count = names_count[cam.name]
-            duplicate_suffix = f" ({duplicate_count})" if duplicate_count > 0 else ""
-            unique_camera_name = f"{cam.name}{duplicate_suffix}"
-            names_count[cam.name] += 1
-            cameras.append(CameraInfo(index=cam.index, name=unique_camera_name))
+        for backend in cv2_enumerate_cameras.supported_backends:
+            for cam in cv2_enumerate_cameras.cameras_generator(backend):
+                duplicate_count = names_count[cam.name]
+                duplicate_suffix = f" ({duplicate_count})" if duplicate_count > 0 else ""
+                unique_camera_name = f"{cam.name}{duplicate_suffix}"
+                names_count[cam.name] += 1
+                cameras.append(CameraInfo(index=cam.index, name=unique_camera_name, backend=cam.backend))
         return cameras
 
     @staticmethod

@@ -38,6 +38,7 @@ class DisconnectedSourceConfig(BaseSourceConfig):
 class WebcamSourceConfig(BaseSourceConfig):
     source_type: Literal[SourceType.WEBCAM]
     device_id: int
+    backend: int  # eg cv2.CAP_DSHOW
 
     model_config = {
         "json_schema_extra": {
@@ -46,6 +47,7 @@ class WebcamSourceConfig(BaseSourceConfig):
                 "name": "Webcam 0",
                 "id": "f9e0ae4f-d96c-4304-baab-2ab845362d03",
                 "device_id": 0,
+                "backend": 0,
             }
         }
     }

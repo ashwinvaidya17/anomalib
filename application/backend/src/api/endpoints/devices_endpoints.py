@@ -33,5 +33,5 @@ async def get_webcam_devices() -> CameraList:
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
-    camera_list = [Camera(index=cam["index"], name=cam["name"]) for cam in result]
+    camera_list = [Camera(index=cam["index"], name=cam["name"], backend=cam["backend"]) for cam in result]
     return CameraList(devices=camera_list)

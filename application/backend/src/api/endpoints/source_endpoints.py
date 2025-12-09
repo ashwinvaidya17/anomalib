@@ -31,6 +31,7 @@ CREATE_SOURCE_BODY_EXAMPLES = {
             "source_type": "webcam",
             "name": "My Webcam",
             "device_id": 0,
+            "backend": 0,
         },
     ),
     "ip_camera": Example(

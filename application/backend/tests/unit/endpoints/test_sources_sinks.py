@@ -45,6 +45,7 @@ def fxt_webcam_source(fxt_project) -> WebcamSourceConfig:
         source_type=SourceType.WEBCAM,
         name="Test Webcam Source",
         device_id=1,
+        backend=0,
     )
 
 

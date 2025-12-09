@@ -6,6 +6,7 @@ export const getWebcamInitialConfig = (projectId: string): WebcamSourceConfig =>
     device_id: 0,
     project_id: projectId,
     source_type: 'webcam',
+    backend: 0,
 });
 
 export const webcamBodyFormatter = (formData: FormData): WebcamSourceConfig => ({
@@ -14,4 +15,5 @@ export const webcamBodyFormatter = (formData: FormData): WebcamSourceConfig => (
     source_type: 'webcam',
     project_id: String(formData.get('project_id')),
     device_id: Number(formData.get('device_id')),
+    backend: Number(formData.get('backend')),
 });

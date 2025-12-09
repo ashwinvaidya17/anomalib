@@ -16,6 +16,7 @@ const mockedSource: WebcamSourceConfig = {
     name: 'Mock Source',
     source_type: 'webcam' as const,
     device_id: 0,
+    backend: 0,
 };
 
 vi.mock('@geti-inspect/hooks', () => ({ useProjectIdentifier: () => ({ projectId: 'project-id-123' }) }));

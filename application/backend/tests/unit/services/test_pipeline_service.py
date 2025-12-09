@@ -216,6 +216,7 @@ class TestPipelineService:
             source_type="webcam",
             name="New Source",
             device_id=0,
+            backend=0,
         )
         updated_pipeline = fxt_pipeline.model_copy(update={"source": new_source, "source_id": new_source.id})
         fxt_pipeline_repository.get_by_id.return_value = fxt_pipeline
